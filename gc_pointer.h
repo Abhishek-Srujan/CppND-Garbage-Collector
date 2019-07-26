@@ -105,9 +105,7 @@ Pointer<T,size>::Pointer(T *t){
     if (first)
         atexit(shutdown);
     first = false;
-
-    // TODO: Implement Pointer constructor
-    // Lab: Smart Pointer Project Lab
+    
     // Construct PtrDetails with information about memory block.
     typename std::list<PtrDetails<T> >::iterator p = findPtrInfo(t);
     PtrDetails<T> ptr_details(t, size);
