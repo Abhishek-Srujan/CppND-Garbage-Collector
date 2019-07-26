@@ -100,7 +100,7 @@ bool Pointer<T, size>::first = true;
 
 // Constructor for both initialized and uninitialized objects. -> see class interface
 template<class T,int size>
-Pointer<T,size>::Pointer(T *t){
+Pointer<T,size>::Pointer(T *t):addr(t), isArray(size > 0), arraySize(size){
     // Register shutdown() as an exit function.
     if (first)
         atexit(shutdown);
@@ -108,17 +108,11 @@ Pointer<T,size>::Pointer(T *t){
     
     // Construct PtrDetails with information about memory block.
     typename std::list<PtrDetails<T> >::iterator p = findPtrInfo(t);
-    PtrDetails<T> ptr_details(t, size);
     if (p == refContainer.end()) {
-        refContainer.push_back(ptr_details);
+        refContainer.push_back(PtrDetails<T> (t, size));
     } else {
         p->refcount++;
     }
-
-    // Assign instance variables.
-    addr = ptr_details.memPtr;
-    isArray = ptr_details.isArray;
-    arraySize = ptr_details.arraySize;
 }
 
 // Copy constructor
@@ -193,9 +187,16 @@ T *Pointer<T, size>::operator=(T *t){
     p->refcount--;
     // Then, increment the reference count of
     // the new address.
+    
     p = findPtrInfo(t);
-    p->refcount++;  // increment ref count
+    if (p == refContainer.end()) {
+        refContainer.push_back(PtrDetails<T> (t, size));
+    } else {
+        p->refcount++;
+    }
     addr = t; // store the address.
+    isArray = p->isArray;
+    arraySize = p->arraySize;
     return t;
 }
 
@@ -212,6 +213,8 @@ Pointer<T, size> &Pointer<T, size>::operator=(Pointer &rv){
     p = findPtrInfo(rv.addr);
     p->refcount++;  // increment ref count
     addr = rv.addr; // store the address.
+    isArray = p->isArray;
+    arraySize = p->arraySize;
     return rv;
 }
 
